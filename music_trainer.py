@@ -25,9 +25,10 @@ class MusicTrainer:
 
     # Noms des notes (de bas en haut)
     NOTE_NAMES = ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si']
-    # Positions des notes sur la portée
+    # Positions des notes sur la portée (0 = ligne du bas, 4 = ligne du haut)
+    # Les notes entre les lignes ont des positions demi-entières
     NOTE_POSITIONS = {
-        'Do': 0,   # Sous la portée
+        'Do': 0,   # Sous la portée (ligne supplémentaire)
         'Ré': 0.5,
         'Mi': 1,
         'Fa': 1.5,
@@ -66,7 +67,7 @@ class MusicTrainer:
         # Liste des notes actives
         self.notes = []
 
-        # Position de la ligne verticale
+        # Position de la ligne verticale (où les notes disparaissent)
         self.vertical_line_x = 200
 
         # Temps entre les frames (en ms)
@@ -161,4 +162,247 @@ class MusicTrainer:
         self.root.bind('<Up>', lambda e: self.increase_amplitude())
         self.root.bind('<Down>', lambda e: self.decrease_amplitude())
 
-    # [Le reste du code continue avec les méthodes de la classe...]
+    def create_staff(self):
+        """Dessine la portée sur le canvas."""
+        width = self.canvas.winfo_width() if self.canvas.winfo_width() > 0 else 800
+        height = self.canvas.winfo_height() if self.canvas.winfo_height() > 0 else 400
+
+        # Efface tout
+        self.canvas.delete("all")
+
+        # Dessine les lignes de la portée
+        for i in range(self.NUM_LINES):
+            y = self.STAFF_Y_OFFSET + i * self.LINE_SPACING
+            self.canvas.create_line(0, y, width, y, fill='black', width=1, tags='staff')
+
+        # Dessine la ligne verticale (où les notes disparaissent)
+        self.canvas.create_line(
+            self.vertical_line_x, 0,
+            self.vertical_line_x, height,
+            fill='red', width=2, dash=(5, 5), tags='vertical_line'
+        )
+
+        # Redessine les notes existantes
+        for note in self.notes:
+            self.draw_note(note)
+
+    def draw_note(self, note):
+        """Dessine une note sur le canvas."""
+        x, y, note_name = note
+
+        # Calcule la position Y en fonction de la note
+        note_pos = self.NOTE_POSITIONS.get(note_name, 2)
+        actual_y = self.STAFF_Y_OFFSET + note_pos * self.LINE_SPACING
+
+        # Dessine le cercle de la note
+        note_id = self.canvas.create_oval(
+            x - self.NOTE_RADIUS, actual_y - self.NOTE_RADIUS,
+            x + self.NOTE_RADIUS, actual_y + self.NOTE_RADIUS,
+            fill='black', outline='black', tags=f'note {note_name}'
+        )
+
+        return note_id
+
+    def get_note_y_position(self, note_name):
+        """Retourne la position Y d'une note sur la portée."""
+        note_pos = self.NOTE_POSITIONS.get(note_name, 2)
+        return self.STAFF_Y_OFFSET + note_pos * self.LINE_SPACING
+
+    def spawn_note(self):
+        """Fait apparaître une nouvelle note à droite de l'écran."""
+        if not self.is_playing.get():
+            return
+
+        # Sélectionne les notes disponibles en fonction du niveau d'amplitude
+        available_notes = self.AMPLITUDE_LEVELS.get(self.amplitude_level.get(), ['Mi', 'Sol', 'La'])
+
+        # Si c'est la première note ou si on ne respecte pas l'écart
+        if not self.notes:
+            note_name = random.choice(available_notes)
+        else:
+            # Récupère la dernière note
+            last_note = self.notes[-1]
+            last_note_name = last_note[2]
+            last_note_pos = self.NOTE_POSITIONS.get(last_note_name, 2)
+
+            max_interval = self.INTERVAL_LEVELS.get(self.interval_level.get(), 2)
+
+            # Filtre les notes qui respectent l'écart maximum
+            valid_notes = []
+            for note in available_notes:
+                note_pos = self.NOTE_POSITIONS.get(note, 2)
+                interval = abs(note_pos - last_note_pos)
+                if interval <= max_interval:
+                    valid_notes.append(note)
+
+            # Si aucune note valide, on prend toutes les notes
+            if not valid_notes:
+                valid_notes = available_notes
+
+            note_name = random.choice(valid_notes)
+
+        # Position initiale à droite de l'écran
+        canvas_width = self.canvas.winfo_width() if self.canvas.winfo_width() > 0 else 800
+        x = canvas_width + self.NOTE_RADIUS * 2
+        y = self.get_note_y_position(note_name)
+
+        # Ajoute la note à la liste
+        self.notes.append([x, y, note_name])
+
+        # Dessine la note
+        self.draw_note([x, y, note_name])
+
+    def move_notes(self):
+        """Déplace toutes les notes vers la gauche."""
+        speed = self.calculate_speed()
+        notes_to_remove = []
+
+        for i, note in enumerate(self.notes):
+            x, y, note_name = note
+            new_x = x - speed
+
+            # Si la note passe la ligne verticale, on la marque pour suppression
+            if new_x < self.vertical_line_x - self.NOTE_RADIUS:
+                notes_to_remove.append(i)
+            else:
+                # Met à jour la position
+                self.notes[i] = [new_x, y, note_name]
+
+        # Supprime les notes qui ont passé la ligne
+        for i in sorted(notes_to_remove, reverse=True):
+            self.notes.pop(i)
+
+        # Redessine toutes les notes
+        self.redraw_notes()
+
+    def redraw_notes(self):
+        """Redessine toutes les notes sur le canvas."""
+        # Efface toutes les notes
+        self.canvas.delete("note")
+
+        # Dessine la portée et la ligne verticale
+        width = self.canvas.winfo_width() if self.canvas.winfo_width() > 0 else 800
+        height = self.canvas.winfo_height() if self.canvas.winfo_height() > 0 else 400
+
+        for i in range(self.NUM_LINES):
+            y = self.STAFF_Y_OFFSET + i * self.LINE_SPACING
+            self.canvas.create_line(0, y, width, y, fill='black', width=1, tags='staff')
+
+        self.canvas.create_line(
+            self.vertical_line_x, 0,
+            self.vertical_line_x, height,
+            fill='red', width=2, dash=(5, 5), tags='vertical_line'
+        )
+
+        # Redessine les notes
+        for note in self.notes:
+            self.draw_note(note)
+
+    def calculate_speed(self):
+        """Calcule la vitesse de déplacement en fonction du BPM."""
+        # À 60 BPM, une noire dure 1 seconde
+        # On veut que les notes mettent environ 4 secondes pour traverser l'écran
+        canvas_width = self.canvas.winfo_width() if self.canvas.winfo_width() > 0 else 800
+
+        # Temps pour traverser l'écran (en secondes)
+        traverse_time = 4.0
+
+        # BPM à secondes par beat
+        seconds_per_beat = 60.0 / self.bpm.get()
+
+        # Vitesse en pixels par frame (16ms)
+        speed_per_second = canvas_width / traverse_time
+        speed_per_frame = speed_per_second * (self.frame_delay / 1000.0)
+
+        return speed_per_frame
+
+    def update(self):
+        """Met à jour l'animation (appelée à chaque frame)."""
+        import time
+        current_time = time.time()
+
+        # Spawn une nouvelle note toutes les X secondes (basé sur le BPM)
+        # À 60 BPM, une note par seconde
+        spawn_interval = 60.0 / self.bpm.get()
+
+        if current_time - self.last_note_spawn > spawn_interval:
+            self.spawn_note()
+            self.last_note_spawn = current_time
+
+        # Déplace les notes
+        self.move_notes()
+
+        # Planifie la prochaine frame
+        self.animation_id = self.root.after(self.frame_delay, self.update)
+
+    def start_animation(self):
+        """Démarre l'animation."""
+        if self.animation_id is None:
+            self.last_note_spawn = 0
+            self.update()
+
+    def stop_animation(self):
+        """Arrête l'animation."""
+        if self.animation_id is not None:
+            self.root.after_cancel(self.animation_id)
+            self.animation_id = None
+
+    def toggle_play(self):
+        """Bascule entre lecture et pause."""
+        if self.is_playing.get():
+            self.is_playing.set(False)
+            self.stop_animation()
+        else:
+            self.is_playing.set(True)
+            self.start_animation()
+
+    def clear_notes(self):
+        """Efface toutes les notes."""
+        self.notes = []
+        self.redraw_notes()
+
+    def increase_bpm(self):
+        """Augmente le BPM."""
+        self.bpm.set(min(self.bpm.get() + 10, 300))
+
+    def decrease_bpm(self):
+        """Diminue le BPM."""
+        self.bpm.set(max(self.bpm.get() - 10, 20))
+
+    def increase_amplitude(self):
+        """Augmente le niveau d'amplitude."""
+        self.amplitude_level.set(min(self.amplitude_level.get() + 1, 3))
+
+    def decrease_amplitude(self):
+        """Diminue le niveau d'amplitude."""
+        self.amplitude_level.set(max(self.amplitude_level.get() - 1, 1))
+
+    def increase_interval(self):
+        """Augmente le niveau d'écart."""
+        self.interval_level.set(min(self.interval_level.get() + 1, 3))
+
+    def decrease_interval(self):
+        """Diminue le niveau d'écart."""
+        self.interval_level.set(max(self.interval_level.get() - 1, 1))
+
+    def on_close(self):
+        """Gère la fermeture de la fenêtre."""
+        self.stop_animation()
+        self.root.destroy()
+
+    def on_resize(self, event):
+        """Gère le redimensionnement de la fenêtre."""
+        self.create_staff()
+
+def main():
+    """Point d'entrée du programme."""
+    root = tk.Tk()
+    app = MusicTrainer(root)
+
+    # Bind l'événement de redimensionnement
+    root.bind('<Configure>', app.on_resize)
+
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
