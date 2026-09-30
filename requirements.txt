@@ -1,0 +1,15 @@
+# Requirements for Music Reading Trainer
+# Tkinter is included in standard Python library
+# On most Linux systems, you need to install python3-tk package
+
+# For Debian/Ubuntu:
+# sudo apt-get install python3-tk
+
+# For Fedora/RHEL:
+# sudo dnf install python3-tkinter
+
+# For Arch Linux:
+# sudo pacman -S tk
+
+# For Windows:
+# Tkinter is usually included with Python installation
