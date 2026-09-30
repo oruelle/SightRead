@@ -245,9 +245,8 @@ class MusicTrainer:
 
             note_name = random.choice(valid_notes)
 
-        # Position initiale à droite de l'écran
-        canvas_width = self.canvas.winfo_width() if self.canvas.winfo_width() > 0 else 800
-        x = canvas_width + self.NOTE_RADIUS * 2
+        # Position initiale fixe à droite de l'écran
+        x = 800 + self.NOTE_RADIUS * 2
         y = self.get_note_y_position(note_name)
 
         # Ajoute la note à la liste
@@ -303,19 +302,16 @@ class MusicTrainer:
             self.draw_note(note)
 
     def calculate_speed(self):
-        """Calcule la vitesse de déplacement en fonction du BPM."""
-        # À 60 BPM, une noire dure 1 seconde
-        # On veut que les notes mettent environ 4 secondes pour traverser l'écran
-        canvas_width = self.canvas.winfo_width() if self.canvas.winfo_width() > 0 else 800
+        """Calcule la vitesse de déplacement en fonction du BPM avec distance fixe entre notes."""
+        # Distance fixe entre les notes (en pixels)
+        NOTE_SPACING = 100
 
-        # Temps pour traverser l'écran (en secondes)
-        traverse_time = 4.0
-
-        # BPM à secondes par beat
+        # Temps entre l'apparition de deux notes (basé sur le BPM)
+        # À 60 BPM, une note par seconde
         seconds_per_beat = 60.0 / self.bpm.get()
 
         # Vitesse en pixels par frame (16ms)
-        speed_per_second = canvas_width / traverse_time
+        speed_per_second = NOTE_SPACING / seconds_per_beat
         speed_per_frame = speed_per_second * (self.frame_delay / 1000.0)
 
         return speed_per_frame
