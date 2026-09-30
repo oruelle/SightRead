@@ -24,7 +24,7 @@ class MusicTrainer:
     NOTE_SPEED_BASE = 2.0  # Vitesse de base (pixels par frame)
 
     # Noms des notes (de bas en haut)
-    NOTE_NAMES = ['Mi0', 'Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do2', 'Mi2']
+    NOTE_NAMES = ['Mi0', 'Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do2', 'Ré2', 'Mi2']
     # Positions des notes sur la portée (0 = ligne du bas, 4 = ligne du haut)
     # Les notes entre les lignes ont des positions demi-entières
     NOTE_POSITIONS = {
@@ -37,6 +37,7 @@ class MusicTrainer:
         'La': 2.5,
         'Si': 3,
         'Do2': 3.5,  # Au-dessus de la portée
+        'Ré2': 4.0,  # Ré sur-aigu
         'Mi2': 4.5,  # Mi sur-aigu - bien au-dessus de la portée
     }
 
@@ -45,7 +46,7 @@ class MusicTrainer:
         1: ['Mi', 'Sol', 'La'],           # Niveau 1: 3 notes
         2: ['Do', 'Ré', 'Mi', 'Fa', 'Sol'],  # Niveau 2: 5 notes
         3: ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do2'],  # Niveau 3: 8 notes
-        4: ['Mi0', 'Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do2', 'Mi2'],  # Niveau 4: 10 notes
+        4: ['Mi0', 'Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do2', 'Ré2', 'Mi2'],  # Niveau 4: 11 notes
     }
 
     # Niveaux d'écart maximum entre notes successives
