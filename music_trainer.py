@@ -213,7 +213,7 @@ class MusicTrainer:
         return self.STAFF_Y_OFFSET + note_pos * self.LINE_SPACING
 
     def spawn_note(self):
-        """Fait apparaître une nouvelle note à droite de l'écran."""
+        """Fait apparaître une nouvelle note à droite de la dernière note."""
         if not self.is_playing.get():
             return
 
@@ -245,8 +245,13 @@ class MusicTrainer:
 
             note_name = random.choice(valid_notes)
 
-        # Position initiale fixe à droite de l'écran
-        x = 800 + self.NOTE_RADIUS * 2
+        # Position initiale à NOTE_SPACING pixels à droite de la dernière note
+        NOTE_SPACING = 100
+        if self.notes:
+            last_x = self.notes[-1][0]
+            x = last_x + NOTE_SPACING
+        else:
+            x = 800 + self.NOTE_RADIUS * 2
         y = self.get_note_y_position(note_name)
 
         # Ajoute la note à la liste
@@ -318,16 +323,8 @@ class MusicTrainer:
 
     def update(self):
         """Met à jour l'animation (appelée à chaque frame)."""
-        import time
-        current_time = time.time()
-
-        # Spawn une nouvelle note toutes les X secondes (basé sur le BPM)
-        # À 60 BPM, une note par seconde
-        spawn_interval = 60.0 / self.bpm.get()
-
-        if current_time - self.last_note_spawn > spawn_interval:
-            self.spawn_note()
-            self.last_note_spawn = current_time
+        # Spawn une nouvelle note directement
+        self.spawn_note()
 
         # Déplace les notes
         self.move_notes()
