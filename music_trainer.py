@@ -24,11 +24,12 @@ class MusicTrainer:
     NOTE_SPEED_BASE = 2.0  # Vitesse de base (pixels par frame)
 
     # Noms des notes (de bas en haut)
-    NOTE_NAMES = ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si']
+    NOTE_NAMES = ['Mi0', 'Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do2', 'Mi2']
     # Positions des notes sur la portée (0 = ligne du bas, 4 = ligne du haut)
     # Les notes entre les lignes ont des positions demi-entières
     NOTE_POSITIONS = {
-        'Do': 0,   # Sous la portée (ligne supplémentaire)
+        'Mi0': -1,   # Mi grave - sous la portée
+        'Do': 0,     # Sous la portée
         'Ré': 0.5,
         'Mi': 1,
         'Fa': 1.5,
@@ -36,13 +37,15 @@ class MusicTrainer:
         'La': 2.5,
         'Si': 3,
         'Do2': 3.5,  # Au-dessus de la portée
+        'Mi2': 4.5,  # Mi sur-aigu - bien au-dessus de la portée
     }
 
     # Niveaux d'amplitude (nombre de notes différentes)
     AMPLITUDE_LEVELS = {
         1: ['Mi', 'Sol', 'La'],           # Niveau 1: 3 notes
         2: ['Do', 'Ré', 'Mi', 'Fa', 'Sol'],  # Niveau 2: 5 notes
-        3: ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si'],  # Niveau 3: 7 notes
+        3: ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do2'],  # Niveau 3: 8 notes
+        4: ['Mi0', 'Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si', 'Do2', 'Mi2'],  # Niveau 4: 10 notes
     }
 
     # Niveaux d'écart maximum entre notes successives
@@ -371,7 +374,7 @@ class MusicTrainer:
 
     def increase_amplitude(self):
         """Augmente le niveau d'amplitude."""
-        self.amplitude_level.set(min(self.amplitude_level.get() + 1, 3))
+        self.amplitude_level.set(min(self.amplitude_level.get() + 1, 4))
 
     def decrease_amplitude(self):
         """Diminue le niveau d'amplitude."""
